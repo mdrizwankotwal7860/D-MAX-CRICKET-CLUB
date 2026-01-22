@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}Tournaments - Box Cricket Arena{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1>Upcoming Events & Tournaments</h1>
+    <p>Join the league, compete with the best!</p>
+</section>
+
+<div class="container tournaments-container">
+    <!-- Tournament Card Template (Repeated) -->
+    <div class="tournament-list" id="tournament-list">
+        <!-- JS will populate this, or we can use Jinja here if we passed data. 
+             Since I set up API, I'll use JS to fetch for dynamic feel or just hardcode some examples for now in HTML if DB is empty -->
+
+        <div class="loading-spinner">Loading tournaments...</div>
+    </div>
+</div>
+
+<!-- Registration Modal -->
+<div id="regModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <h2>Team Registration</h2>
+        <form id="regForm" onsubmit="handleRegistration(event)">
+            <input type="hidden" id="tournamentId" name="tournamentId">
+            <div class="form-group">
+                <label>Team Name</label>
+                <input type="text" id="teamName" required>
+            </div>
+            <div class="form-group">
+                <label>Captain Name</label>
+                <input type="text" id="captainName" required>
+            </div>
+            <div class="form-group">
+                <label>Captain Phone</label>
+                <input type="tel" id="captainPhone" required>
+            </div>
+            <button type="submit" class="btn-cta">Register Team</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

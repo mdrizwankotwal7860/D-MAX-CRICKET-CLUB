@@ -1,0 +1,50 @@
+/* Payment Section Styles */
+.payment-section {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    text-align: center;
+}
+
+.qr-container {
+    margin-bottom: 1.5rem;
+}
+
+.qr-code {
+    max-width: 200px;
+    border: 2px solid #673ab7;
+    /* PhonePe Purple */
+    border-radius: 8px;
+    padding: 5px;
+    background: white;
+}
+
+.instruction-text {
+    color: #666;
+    margin-top: 0.5rem;
+    font-size: 0.95rem;
+}
+
+.file-preview {
+    margin-top: 1rem;
+    min-height: 100px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 2px dashed #ddd;
+    border-radius: 4px;
+}
+
+.file-preview img {
+    max-height: 200px;
+    max-width: 100%;
+}
+
+button:disabled {
+    background-color: #cccccc !important;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}D-MAX CRICKET CLUB{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <a href="/" class="logo">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="D-MAX Cricket Club Logo">
+        </a>
+        <ul class="nav-links">
+            <li><a href="/">Home</a></li>
+            <li><a href="/booking">Booking</a></li>
+            <li><a href="/tournaments">Tournaments</a></li>
+            <li><a href="/pricing">Pricing</a></li>
+            <li><a href="/contact">Contact</a></li>
+            <li><a href="/admin">Admin</a></li>
+        </ul>
+        <a href="/booking" class="btn-cta">Book Now</a>
+    </nav>
+
+    <main>
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <div class="flash-messages" style="padding: 20px; text-align: center;">
+            {% for message in messages %}
+            <div class="alert"
+                style="background: #f8d7da; color: #721c24; padding: 10px; margin-bottom: 10px; border-radius: 5px;">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>D-MAX CRICKET CLUB</h3>
+                <p>The premium destination for box cricket lovers. Play hard, play fair!</p>
+            </div>
+            <div class="footer-section">
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/booking">Book a Slot</a></li>
+                    <li><a href="/tournaments">Events</a></li>
+                    <li><a href="/contact">Contact Us</a></li>
+                    <li><a href="/admin">Admin Login</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>Contact Info</h3>
+                <p><i class="fas fa-map-marker-alt"></i> Gudihal road, near vani plot</p>
+                <p><i class="fas fa-phone"></i> 9901462324</p>
+                <p><i class="fas fa-envelope"></i> d-maxcricketclub@gmail.com</p>
+            </div>
+        </div>
+        <div class="copyright">
+            <p>&copy; 2024 D-MAX CRICKET CLUB. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+
+</html>

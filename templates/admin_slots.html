@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Manage Slots - Admin Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .slot-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .slot-card {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #eee;
+            position: relative;
+        }
+
+        .slot-card.inactive {
+            background: #f8f9fa;
+            opacity: 0.7;
+        }
+
+        .slot-time {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .slot-actions {
+            margin-top: 10px;
+            display: flex;
+            /* Ensure these are on one line */
+            gap: 10px;
+            justify-content: flex-end;
+            /* Push to right */
+        }
+
+        .slot-actions form {
+            margin: 0;
+            /* Remove default form margin */
+        }
+
+        .toggle-switch {
+            cursor: pointer;
+            color: #2e7d32;
+        }
+
+        .toggle-switch.off {
+            color: #ccc;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Sidebar (Simplified for this page or reuse include) -->
+    <aside class="sidebar">
+        <a href="/admin" class="sidebar-header">
+            D-MAX Admin
+        </a>
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <a href="/admin/dashboard" class="nav-link">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <div class="nav-link active">
+                    <i class="fas fa-clock"></i> Manage Slots
+                </div>
+            </li>
+        </ul>
+    </aside>
+
+    <div class="main-wrapper">
+        <header class="top-header">
+            <h2>Slot Management</h2>
+        </header>
+
+        <main class="main-content-area">
+
+            {% with messages = get_flashed_messages() %}
+            {% if messages %}
+            <div style="margin-bottom: 20px;">
+                {% for message in messages %}
+                <div style="padding: 10px; background: #d4edda; color: #155724; border-radius: 4px;">{{ message }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% endwith %}
+
+            <div class="admin-card">
+                <h3>Add New Slot</h3>
+                <form action="/admin/slots/add" method="POST" style="display: flex; gap: 20px; align-items: flex-end;">
+                    <div class="form-grp" style="flex: 1; margin-bottom: 0;">
+                        <label class="form-label">Start Time</label>
+                        <input type="time" name="start_time" class="form-inp" required>
+                    </div>
+                    <div class="form-grp" style="flex: 1; margin-bottom: 0;">
+                        <label class="form-label">End Time</label>
+                        <input type="time" name="end_time" class="form-inp" required>
+                    </div>
+                    <button type="submit" class="btn-primary-flat">Add Slot</button>
+                </form>
+            </div>
+
+            <div class="admin-card">
+                <h3>Current Slots</h3>
+                <div class="slot-grid">
+                    {% for slot in slots %}
+                    <div class="slot-card {% if not slot.is_active %}inactive{% endif %}">
+                        <div class="slot-time">{{ slot.start_time }} - {{ slot.end_time }}</div>
+                        <div style="font-size: 0.85rem; color: #666; margin-top: 5px;">
+                            Status: {{ 'Active' if slot.is_active else 'Inactive' }}
+                        </div>
+
+                        <div class="slot-actions">
+                            <!-- Toggle Button -->
+                            <form action="/admin/slots/toggle/{{ slot.id }}" method="POST">
+                                <button type="submit" class="btn-action" title="Toggle Active Status"
+                                    style="background: none; border: 1px solid #ddd;">
+                                    <i
+                                        class="fas fa-power-off {% if slot.is_active %}toggle-switch{% else %}toggle-switch off{% endif %}"></i>
+                                </button>
+                            </form>
+
+                            <!-- Delete Button -->
+                            <form action="/admin/slots/delete/{{ slot.id }}" method="POST"
+                                onsubmit="return confirm('Delete this slot?');">
+                                <button type="submit" class="btn-action btn-reject" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% else %}
+                    <p>No slots found. Add one above.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+</body>
+
+</html>

@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}Contact Us - Box Cricket Arena{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1>Get In Touch</h1>
+    <p>We'd love to hear from you.</p>
+</section>
+
+<div class="container contact-container">
+    <div class="contact-info">
+        <h3>Contact Information</h3>
+        <p><i class="fas fa-map-marker-alt"></i> Gudihal road, near vani plot</p>
+        <p><i class="fas fa-phone"></i> 9901462324</p>
+        <p><i class="fas fa-envelope"></i> d-maxcricketclub@gmail.com</p>
+
+        <div class="map-placeholder">
+            <!-- Google Maps Embed would go here -->
+            <iframe
+                src="https://maps.google.com/maps?q=Gudihal+road,+near+vani+plot,+Hubli,+Karnataka,+India&t=&z=15&ie=UTF8&iwloc=&output=embed"
+                width="100%" height="300" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+        </div>
+    </div>
+
+    <div class="contact-form">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('contact') }}">
+            <div class="form-group">
+                <label>Name</label>
+                <input type="text" name="name" placeholder="Your Name" required>
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" name="email" placeholder="Your Email" required>
+            </div>
+            <div class="form-group">
+                <label>Message</label>
+                <textarea name="message" rows="5" placeholder="Your Message" required></textarea>
+            </div>
+            <button type="submit" class="btn-cta">Send Message</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

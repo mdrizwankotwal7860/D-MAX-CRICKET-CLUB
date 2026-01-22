@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - D-MAX CRICKET CLUB</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <a href="/admin" class="sidebar-header">
+            <i class="fas fa-shield-alt sidebar-brand-icon"></i>
+            D-MAX Admin
+        </a>
+
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <div class="nav-link active" onclick="switchView('dashboard', this)">
+                    <i class="fas fa-th-large"></i>
+                    <span>Dashboard</span>
+                </div>
+            </li>
+            <li class="nav-item">
+                <div class="nav-link" onclick="switchView('bookings', this)">
+                    <i class="fas fa-calendar-check"></i>
+                    <span>All Bookings</span>
+                </div>
+            </li>
+            <li class="nav-item">
+                <div class="nav-link" onclick="switchView('upcoming', this)">
+                    <i class="fas fa-trophy"></i>
+                    <span>Upcoming Tournaments</span>
+                </div>
+            </li>
+            <li class="nav-item">
+                <a href="/admin/slots" class="nav-link">
+                    <i class="fas fa-clock"></i>
+                    <span>Manage Slots</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <div class="nav-link" onclick="switchView('manage', this)">
+                    <i class="fas fa-edit"></i>
+                    <span>Manage Tournaments</span>
+                </div>
+            </li>
+        </ul>
+
+        <div class="sidebar-footer">
+            <a href="/admin/logout" class="btn-sidebar-cta">
+                <i class="fas fa-sign-out-alt" style="margin-right: 8px;"></i> Logout
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main-wrapper">
+        <header class="top-header">
+            <div class="mobile-toggle" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </div>
+            <div style="flex-grow: 1;"></div>
+            <div class="user-profile">
+                <span>Welcome, <strong>Admin</strong></span>
+                <div class="user-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content-area">
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages() %}
+            {% if messages %}
+            <div style="margin-bottom: 25px;">
+                {% for message in messages %}
+                <div
+                    style="background: #d3f9d8; color: #2b8a3e; padding: 15px; border-radius: 8px; border: 1px solid #b2f2bb; margin-bottom: 10px; display: flex; align-items: center;">
+                    <i class="fas fa-check-circle" style="margin-right: 10px;"></i> {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% endwith %}
+
+            <!-- 1. Dashboard View -->
+            <section id="dashboard" class="section-fade active-view">
+                <h1 class="page-header-title">Dashboard Overview</h1>
+
+                <div class="stats-container">
+                    <div class="admin-card stat-item">
+                        <div>
+                            <h3 class="stat-value">{{ bookings|length }}</h3>
+                            <p class="stat-label">Total Bookings</p>
+                        </div>
+                        <div class="stat-icon-box bg-light-blue">
+                            <i class="fas fa-clipboard-list"></i>
+                        </div>
+                    </div>
+
+                    <div class="admin-card stat-item">
+                        <div>
+                            <h3 class="stat-value">{{ tournaments|length }}</h3>
+                            <p class="stat-label">Active Tournaments</p>
+                        </div>
+                        <div class="stat-icon-box bg-light-orange">
+                            <i class="fas fa-trophy"></i>
+                        </div>
+                    </div>
+
+                    <div class="admin-card stat-item">
+                        <div>
+                            <h3 class="stat-value">Active</h3>
+                            <p class="stat-label">System Status</p>
+                        </div>
+                        <div class="stat-icon-box bg-light-green">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="admin-card">
+                    <h3 style="margin-top: 0; margin-bottom: 20px;">Recent Contact Messages</h3>
+                    <div class="table-container">
+                        <table class="modern-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Message</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for msg in contact_messages %}
+                                <tr>
+                                    <td>{{ msg.sent_at }}</td>
+                                    <td>{{ msg.name }}</td>
+                                    <td>{{ msg.email }}</td>
+                                    <td>{{ msg.message }}</td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="4" style="text-align: center; color: #adb5bd;">No messages yet.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. Bookings View -->
+            <section id="bookings" class="section-fade">
+                <h1 class="page-header-title">Booking Management</h1>
+
+                <div class="admin-card">
+                    <div class="table-container">
+                        <table class="modern-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Date & Time</th>
+                                    <th>Customer</th>
+                                    <th>Details</th>
+                                    <th>Status</th>
+                                    <th>Payment</th>
+                                    <th>Actions</th>
+                                    <th>Delete</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for booking in bookings %}
+                                <tr>
+                                    <td><strong>#{{ booking.id }}</strong></td>
+                                    <td>
+                                        <div>{{ booking.booking_date }}</div>
+                                        <div style="font-size: 0.85rem; color: #adb5bd;">{{ booking.start_time }}</div>
+                                    </td>
+                                    <td>
+                                        <div style="font-weight: 500;">{{ booking.customer_name }}</div>
+                                        <div style="font-size: 0.85rem; color: #adb5bd;">{{ booking.customer_phone }}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div>Duration: {{ booking.duration_hours }} hr</div>
+                                        <div>Total: ₹{{ booking.total_price }}</div>
+                                    </td>
+                                    <td>
+                                        <span class="badge-status badge-{{ booking.status }}">{{ booking.status
+                                            }}</span>
+                                    </td>
+                                    <td>
+                                        <span
+                                            class="badge-status badge-{{ 'paid' if booking.payment_status == 'paid_verified' else ('rejected' if booking.payment_status == 'rejected' else 'pending') }}">
+                                            {{ booking.payment_status }}
+                                        </span>
+                                        <div style="font-size: 0.8rem; margin-top: 4px; color: #adb5bd;">
+                                            Paid: ₹{{ booking.paid_amount }}
+                                        </div>
+                                        {% if booking.payment_image %}
+                                        <a href="{{ url_for('static', filename='uploads/payment_proofs/' + booking.payment_image) }}"
+                                            target="_blank" style="font-size: 0.8rem; color: var(--primary-color);">View
+                                            Proof</a>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div style="display: flex; gap: 5px;">
+                                            {% if booking.payment_status == 'pending' or booking.payment_status ==
+                                            'paid_manual_verification' %}
+                                            <form action="{{ url_for('approve_booking', id=booking.id) }}"
+                                                method="POST">
+                                                <button type="submit" class="btn-action btn-approve" title="Approve"
+                                                    onclick="return confirm('Confirm payment?')"><i
+                                                        class="fas fa-check"></i></button>
+                                            </form>
+                                            <form action="{{ url_for('reject_booking', id=booking.id) }}" method="POST">
+                                                <button type="submit" class="btn-action btn-reject" title="Reject"
+                                                    onclick="return confirm('Reject booking?')"><i
+                                                        class="fas fa-times"></i></button>
+                                            </form>
+                                            {% else %}
+                                            <span style="font-size: 0.9rem; color: #adb5bd;">—</span>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <form action="{{ url_for('delete_booking', id=booking.id) }}" method="POST"
+                                            style="margin: 0;">
+                                            <button type="submit" class="btn-action btn-delete" title="Delete Permanent"
+                                                onclick="return confirm('Are you sure you want to delete this booking permanently? This action cannot be undone.')">
+                                                <i class="fas fa-trash"></i> Delete
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="7" style="text-align: center; color: #adb5bd;">No bookings found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. Upcoming Tournaments -->
+            <section id="upcoming" class="section-fade">
+                <h1 class="page-header-title">Upcoming Tournaments</h1>
+                <div class="admin-card">
+                    <div class="table-container">
+                        <table class="modern-table">
+                            <thead>
+                                <tr>
+                                    <th>Tournament</th>
+                                    <th>Date</th>
+                                    <th>Entry Fee</th>
+                                    <th>Registrations</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for t in tournaments %}
+                                <tr>
+                                    <td><strong>{{ t.title }}</strong></td>
+                                    <td>{{ t.event_date }}</td>
+                                    <td>₹{{ t.entry_fee }}</td>
+                                    <td>
+                                        <span
+                                            style="background: #e7f5ff; color: #1c7ed6; padding: 4px 10px; border-radius: 4px; font-weight: 500;">
+                                            {{ t.registration_count }} Teams
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="4" style="text-align: center;">No tournaments found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4. Manage Tournaments -->
+            <section id="manage" class="section-fade">
+                <h1 class="page-header-title">Manage Tournaments</h1>
+
+                <div class="admin-card">
+                    <h3 style="margin-top: 0; margin-bottom: 20px;">Add New Tournament</h3>
+                    <form action="/admin/tournaments/add" method="POST" enctype="multipart/form-data">
+                        <div class="stats-container"
+                            style="grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 10px;">
+                            <div class="form-grp">
+                                <label class="form-label">Tournament Name</label>
+                                <input type="text" name="title" class="form-inp" required>
+                            </div>
+                            <div class="form-grp">
+                                <label class="form-label">Event Date</label>
+                                <input type="date" name="date" class="form-inp" required>
+                            </div>
+                            <div class="form-grp">
+                                <label class="form-label">Entry Fee (₹)</label>
+                                <input type="number" name="fee" class="form-inp" required>
+                            </div>
+                            <div class="form-grp">
+                                <label class="form-label">Banner Image</label>
+                                <input type="file" name="image" accept="image/*" class="form-inp" style="padding: 9px;">
+                            </div>
+                        </div>
+                        <div class="form-grp">
+                            <label class="form-label">Description</label>
+                            <textarea name="description" class="form-inp" rows="3"></textarea>
+                        </div>
+                        <button type="submit" class="btn-primary-flat">
+                            Create Tournament
+                        </button>
+                    </form>
+                </div>
+
+                <div class="admin-card">
+                    <h3>Existing Tournaments</h3>
+                    <table class="modern-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for t in tournaments %}
+                            <tr>
+                                <td>{{ t.title }}</td>
+                                <td>{{ t.event_date }}</td>
+                                <td>
+                                    <form action="/admin/tournaments/delete/{{ t.id }}" method="POST"
+                                        onsubmit="return confirm('Delete this tournament?');">
+                                        <button type="submit" class="btn-action btn-reject"
+                                            style="width: auto; padding: 0 10px;">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="3">No tournaments created yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('show-sidebar');
+        }
+
+        function switchView(sectionId, element) {
+            // Hide all sections
+            document.querySelectorAll('.section-fade').forEach(el => el.classList.remove('active-view'));
+            // Show target
+            document.getElementById(sectionId).classList.add('active-view');
+
+            // Update Sidebar Active
+            document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+
+            // Close sidebar on mobile
+            if (window.innerWidth <= 900) {
+                document.getElementById('sidebar').classList.remove('show-sidebar');
+            }
+        }
+    </script>
+</body>
+
+</html>

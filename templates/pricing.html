@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block title %}Pricing - Box Cricket Arena{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1>Our Pricing</h1>
+    <p>Affordable rates for premium experience.</p>
+</section>
+
+<div class="container pricing-container">
+    {% for item in pricing %}
+    <div class="pricing-card {% if item.duration_hours > 1 %}featured{% endif %}">
+        <h3>{{ item.label }}</h3>
+        <div class="price">₹{{ item.price | int }}</div>
+        <p>per {{ item.duration_hours }} hour{% if item.duration_hours > 1 %}s{% endif %}</p>
+        <ul class="features-list">
+            <li>{{ item.description }}</li>
+            {% if item.duration_hours > 1 %}
+            <li>Save Money!</li>
+            <li>Best Value</li>
+            {% else %}
+            <li>Flexible Timing</li>
+            <li>Standard Rate</li>
+            {% endif %}
+        </ul>
+        <a href="{{ url_for('booking') }}" class="btn-cta">Book Now</a>
+    </div>
+    {% endfor %}
+
+    <div class="pricing-card">
+        <h3>Tournament Package</h3>
+        <div class="price">Contact Us</div>
+        <p>for details</p>
+        <ul class="features-list">
+            <li>Full Day Booking</li>
+            <li>Umpire Provided</li>
+            <li>Live Scoring Support</li>
+        </ul>
+        <a href="{{ url_for('contact') }}" class="btn-cta">Enquire</a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block title %}Book Your Slot - Box Cricket Arena{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/payment.css') }}">
+<section class="page-header">
+    <h1>Book Your Slot</h1>
+    <p>Select a date and time to reserve the turf.</p>
+</section>
+
+<div class="container booking-container">
+    <div class="booking-form-card">
+        <form id="bookingForm" onsubmit="handleBooking(event)">
+            <!-- 1. Contact Info -->
+            <div class="form-group">
+                <label for="name">Full Name</label>
+                <input type="text" id="name" name="name" required placeholder="John Doe">
+            </div>
+
+            <div class="form-group">
+                <label for="phone">Phone Number</label>
+                <input type="tel" id="phone" name="phone" required placeholder="9876543210" maxlength="10"
+                    pattern="\d{10}" title="Exactly 10 digits">
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email Address <span class="text-danger">*</span></label>
+                <input type="email" id="email" name="email" required placeholder="john@example.com">
+            </div>
+
+            <!-- 2. Slot Selection -->
+            <div class="form-group">
+                <label for="date">Select Date</label>
+                <input type="date" id="date" name="date" required onchange="loadSlots()">
+            </div>
+
+            <div class="form-group">
+                <label>Select Time Range</label>
+                <p class="small text-muted">Click Start Slot, then Click End Slot (Inclusive).</p>
+                <div id="slots-container" class="slots-grid">
+                    <p class="text-muted">Please select a date first.</p>
+                </div>
+
+                <!-- Hidden inputs for Backend -->
+                <input type="hidden" id="input_start_time" name="start_time" required>
+                <input type="hidden" id="input_end_time" name="end_time" required>
+            </div>
+
+            <div class="form-group">
+                <label>Booking Duration</label>
+                <div id="duration-display"
+                    style="font-weight: bold; padding: 10px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 4px;">
+                    0 hours</div>
+                <input type="hidden" name="duration" value="0"> <!-- Legacy/Fallback -->
+            </div>
+
+            <div class="price-display">
+                Total Price: <span id="total-price">₹0</span>
+            </div>
+
+            <!-- 3. Payment Section -->
+            <div class="form-group payment-section">
+                <h3>Payment Confirmation (Strict Time Limit)</h3>
+
+                <div id="payment-start-section" style="text-align: center; margin: 20px 0;">
+                    <p class="text-danger"><strong>Warning:</strong> You will have exactly 5 minutes to complete payment
+                        and upload proof.</p>
+                    <button type="button" class="btn-cta" onclick="startPaymentTimer()">Start Payment Timer</button>
+                    <input type="hidden" id="payment_token" name="payment_token">
+                </div>
+
+                <div id="active-payment-section" style="display: none;">
+                    <div id="booking-timer"
+                        style="font-size: 1.5rem; font-weight: bold; color: #d9534f; text-align: center; margin: 15px 0; border: 2px solid #d9534f; padding: 10px; border-radius: 5px;">
+                        Time Remaining: <span id="time-left">05:00</span>
+                    </div>
+
+                    <div class="qr-container">
+                        <img src="{{ url_for('static', filename='images/phonepe_qr.jpg') }}" alt="PhonePe QR Code"
+                            class="qr-code">
+                        <p class="instruction-text">Scan & Pay ₹<span id="confirm-amount">0</span><br>Upload
+                            screenshot.</p>
+                    </div>
+
+                    <label for="payment_screenshot">Upload Payment Confirmation Screenshot</label>
+
+                    <div class="payment-verification-steps">
+                        <div class="form-group">
+                            <label for="paid_amount_input">Enter Paid Amount (₹)</label>
+                            <input type="number" id="paid_amount_input" name="paid_amount" placeholder="e.g. 800"
+                                required oninput="validatePayment()">
+                        </div>
+                    </div>
+
+                    <input type="file" id="payment_screenshot" name="payment_screenshot" accept="image/png, image/jpeg"
+                        required onchange="handleFileSelect(event)">
+                    <div id="image-preview" class="file-preview"></div>
+                </div>
+            </div>
+
+            <button type="submit" id="submitBtn" class="btn-cta btn-block" disabled>Register / Confirm Booking</button>
+        </form>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/booking_logic.js') }}"></script>
+<script src="{{ url_for('static', filename='js/payment.js') }}"></script>
+{% endblock %}
