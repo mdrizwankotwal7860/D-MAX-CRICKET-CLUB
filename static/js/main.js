@@ -29,12 +29,16 @@ async function loadTournaments() {
 
             // Construct image path - use local static path for uploaded images
             let imageSrc = '/static/tournament_images/default.jpg';
-            if (t.image) {
+            // The DB column is 'image_url', make sure API returns it (SELECT * returns it)
+            // Backend keys match DB columns usually in simple SELECT *
+            let imgVal = t.image_url || t.image; // Fallback just in case
+
+            if (imgVal) {
                 // Check if it's a full URL or just a filename
-                if (t.image.startsWith('http')) {
-                    imageSrc = t.image;
+                if (imgVal.startsWith('http')) {
+                    imageSrc = imgVal;
                 } else {
-                    imageSrc = `/static/tournament_images/${t.image}`;
+                    imageSrc = `/static/tournament_images/${imgVal}`;
                 }
             }
 
@@ -81,7 +85,7 @@ function openRegModal(tournamentId) {
         tInput.value = tournamentId;
         modal.style.display = 'block';
     } else {
-        alert('Registration unavailable at the moment.');
+        showCustomAlert('Registration unavailable at the moment.', 'Info');
     }
 }
 
@@ -110,13 +114,13 @@ async function handleRegistration(event) {
 
         const result = await response.json();
         if (response.ok) {
-            alert('Registration Successful!');
+            showCustomAlert('Registration Successful!', 'Success');
             closeModal();
             loadTournaments(); // Refresh list if needed (e.g. to update counts)
         } else {
-            alert('Error: ' + result.error);
+            showCustomAlert(result.error || 'Registration failed', 'Error');
         }
     } catch (error) {
-        alert('Registration failed');
+        showCustomAlert('Registration failed. Please try again.', 'Error');
     }
 }

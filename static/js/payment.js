@@ -57,7 +57,38 @@ function updatePrice() {
 // --- Payment Timer Logic ---
 let paymentTimer;
 
-function startPaymentTimer() {
+async function startPaymentTimer() {
+    const slotIdsStr = document.getElementById('selected_slot_ids').value;
+    const uid = document.getElementById('user_identifier').value;
+
+    if (!slotIdsStr || !uid) {
+        showCustomAlert("Please select slots first.", "Error", "error");
+        return;
+    }
+    const slotIds = JSON.parse(slotIdsStr);
+
+    // 0. Try Lock
+    try {
+        for (let sid of slotIds) {
+            const res = await fetch('/api/lock_slot', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ slot_id: sid, user_identifier: uid })
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                showCustomAlert(data.error || "Slot unavailable", "Lock Failed", "error");
+                // Optional: Refresh slots
+                if (typeof loadSlots === 'function') loadSlots();
+                return;
+            }
+        }
+    } catch (e) {
+        console.error(e);
+        showCustomAlert("Network error locking slots", "Error", "error");
+        return;
+    }
+
     // 1. Get Payment Token from Server
     fetch('/api/initiate_payment', { method: 'POST' })
         .then(res => res.json())
@@ -86,8 +117,7 @@ function startPaymentTimer() {
             }
         })
         .catch(err => {
-            alert("Error starting payment session. Please try again.");
-            console.error(err);
+            console.error("Error starting payment session:", err);
         });
 }
 
@@ -99,42 +129,20 @@ function updateTimerDisplay(seconds) {
 }
 
 function handlePaymentTimeout() {
-    alert("Payment time expired! The slot has been released.");
-    location.reload(); // Refresh page to reset
+    showCustomAlert("Payment time expired! The slot has been released.", "Timeout", "error");
+    setTimeout(() => location.reload(), 2000); // Wait for user to read
 }
 
 function validatePayment() {
-    // const qrScanned = document.getElementById('qr_scanned').checked; // Removed as element doesn't exist
-    const paidAmount = parseFloat(document.getElementById('paid_amount_input').value);
-    const requiredAmount = parseFloat(document.getElementById('confirm-amount').innerText);
     const uploadInput = document.getElementById('payment_screenshot');
     const submitBtn = document.getElementById('submitBtn');
-
-    // Warning/Error elements might not exist in new template, check first
-    const errorMsg = document.getElementById('payment-error');
     const warningMsg = document.getElementById('upload-warning');
 
-    // Check Amount
-    let amountValid = false;
-    if (!isNaN(paidAmount) && Math.abs(paidAmount - requiredAmount) < 1) {
-        amountValid = true;
-        if (errorMsg) errorMsg.style.display = 'none';
-    } else {
-        if (paidAmount && errorMsg) errorMsg.style.display = 'block';
-    }
-
-    // New Logic: If amount is correct, enable file input. If file selected, enable submit.
-    if (amountValid) {
-        uploadInput.disabled = false;
+    // Validation: Only check if file is selected
+    if (uploadInput.files.length > 0) {
+        submitBtn.disabled = false;
         if (warningMsg) warningMsg.style.display = 'none';
-
-        if (uploadInput.files.length > 0) {
-            submitBtn.disabled = false;
-        } else {
-            submitBtn.disabled = true;
-        }
     } else {
-        uploadInput.disabled = true;
         submitBtn.disabled = true;
         if (warningMsg) warningMsg.style.display = 'block';
     }
@@ -142,35 +150,68 @@ function validatePayment() {
 
 function handleFileSelect(event) {
     const file = event.target.files[0];
-    if (file) {
-        // Preview
-        const reader = new FileReader();
-        reader.onload = function (e) {
-            const img = document.createElement('img');
-            img.src = e.target.result;
-            img.style.maxWidth = '100%';
-            img.style.marginTop = '10px';
-            document.getElementById('image-preview').innerHTML = '';
-            document.getElementById('image-preview').appendChild(img);
-        };
-        reader.readAsDataURL(file);
+    const fileNameDisplay = document.getElementById('file-name-display');
+    const errorMsg = document.getElementById('upload-error');
+    const previewContainer = document.getElementById('image-preview');
+    const submitBtn = document.getElementById('submitBtn');
 
-        // Re-validate to enable submit button
-        validatePayment();
+    // Reset
+    previewContainer.innerHTML = '';
+    errorMsg.style.display = 'none';
+    errorMsg.textContent = '';
+    submitBtn.disabled = true;
+
+    if (!file) {
+        fileNameDisplay.textContent = "No file chosen";
+        return;
     }
+
+    // 1. Validate File Type (MIME)
+    const validTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+    if (!validTypes.includes(file.type)) {
+        errorMsg.textContent = "Error: Only PNG and JPEG images are allowed.";
+        errorMsg.style.display = 'block';
+        event.target.value = ''; // Clear input
+        fileNameDisplay.textContent = "No file chosen";
+        return;
+    }
+
+    // 2. Validate Size (Max 2MB)
+    const maxSize = 2 * 1024 * 1024; // 2MB
+    if (file.size > maxSize) {
+        errorMsg.textContent = "Error: Image size exceeds 2MB limit.";
+        errorMsg.style.display = 'block';
+        event.target.value = ''; // Clear input
+        fileNameDisplay.textContent = "No file chosen";
+        return;
+    }
+
+    // Valid
+    fileNameDisplay.textContent = file.name;
+
+    // Preview
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        const img = document.createElement('img');
+        img.src = e.target.result;
+        img.style.maxWidth = '100%';
+        img.style.maxHeight = '300px';
+        img.style.border = '1px solid #ddd';
+        img.style.borderRadius = '4px';
+        img.style.marginTop = '10px';
+        previewContainer.appendChild(img);
+    };
+    reader.readAsDataURL(file);
+
+    // Re-validate to enable submit button
+    validatePayment();
 }
 
 function handleBooking(event) {
     event.preventDefault();
 
     // Final Client Check
-    const paidAmount = document.getElementById('paid_amount_input').value;
-    const requiredAmount = document.getElementById('confirm-amount').innerText;
-
-    if (paidAmount != requiredAmount) {
-        alert("Paid amount must exactly match the total price.");
-        return;
-    }
+    // Removed paidAmount check as it's no longer input by user
 
     const form = document.getElementById('bookingForm');
     const formData = new FormData(form);
@@ -186,17 +227,17 @@ function handleBooking(event) {
         .then(response => response.json())
         .then(data => {
             if (data.error) {
-                alert(data.error);
+                showCustomAlert(data.error, "Booking Failed", "error");
                 submitBtn.disabled = false;
                 submitBtn.innerText = "Register / Confirm Booking";
             } else {
-                alert("Booking Confirmed Successfully!");
-                window.location.href = '/';
+                showCustomAlert("Booking Confirmed Successfully!", "Success", "success");
+                setTimeout(() => window.location.href = '/', 2000);
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert("An error occurred. Please try again.");
+            showCustomAlert("An error occurred. Please try again.", "Error", "error");
             submitBtn.disabled = false;
             submitBtn.innerText = "Register / Confirm Booking";
         });

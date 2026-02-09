@@ -45,6 +45,8 @@
                 <!-- Hidden inputs for Backend -->
                 <input type="hidden" id="input_start_time" name="start_time" required>
                 <input type="hidden" id="input_end_time" name="end_time" required>
+                <input type="hidden" id="user_identifier" name="user_identifier">
+                <input type="hidden" id="selected_slot_ids" name="selected_slot_ids">
             </div>
 
             <div class="form-group">
@@ -83,19 +85,29 @@
                             screenshot.</p>
                     </div>
 
-                    <label for="payment_screenshot">Upload Payment Confirmation Screenshot</label>
+                    <label for="payment_screenshot" style="font-weight: bold; display: block; margin-bottom: 10px;">
+                        Upload Payment Screenshot (PNG / JPEG only)
+                    </label>
 
                     <div class="payment-verification-steps">
-                        <div class="form-group">
-                            <label for="paid_amount_input">Enter Paid Amount (₹)</label>
-                            <input type="number" id="paid_amount_input" name="paid_amount" placeholder="e.g. 800"
-                                required oninput="validatePayment()">
+                        <!-- Custom Upload UI -->
+                        <div class="file-upload-wrapper"
+                            style="position: relative; overflow: hidden; display: inline-block;">
+                            <button type="button" class="btn-cta"
+                                style="background-color: #f0f0f0; color: #333; border: 1px solid #ccc;"
+                                onclick="document.getElementById('payment_screenshot').click()">
+                                Choose Image
+                            </button>
+                            <span id="file-name-display" style="margin-left: 10px; color: #666;">No file chosen</span>
+
+                            <input type="file" id="payment_screenshot" name="payment_screenshot"
+                                accept=".png, .jpg, .jpeg" required onchange="handleFileSelect(event)"
+                                style="position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; height: 100%; width: 100%;">
                         </div>
+                        <p id="upload-error" class="text-danger" style="display: none; margin-top: 5px;"></p>
                     </div>
 
-                    <input type="file" id="payment_screenshot" name="payment_screenshot" accept="image/png, image/jpeg"
-                        required onchange="handleFileSelect(event)">
-                    <div id="image-preview" class="file-preview"></div>
+                    <div id="image-preview" class="file-preview" style="margin-top: 15px;"></div>
                 </div>
             </div>
 

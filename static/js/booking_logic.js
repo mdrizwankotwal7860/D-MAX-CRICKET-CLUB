@@ -33,23 +33,31 @@ async function loadSlots() {
 
     try {
         // 1. Fetch Slots (Master Data)
-        const slotsRes = await fetch('/api/slots');
+        const slotsRes = await fetch(`/api/slots?date=${dateStr}`);
+        if (!slotsRes.ok) {
+            const text = await slotsRes.text();
+            throw new Error(`Server Error: ${slotsRes.status} ${text}`);
+        }
         allSlots = await slotsRes.json();
 
         // 2. Fetch Booked IDs
         const bookedRes = await fetch(`/api/check_availability?date=${dateStr}`);
+        if (!bookedRes.ok) {
+            throw new Error(`Availability Error: ${bookedRes.status}`);
+        }
         bookedIds = await bookedRes.json();
 
         renderSlots();
 
     } catch (err) {
         console.error("Error loading slots:", err);
-        container.innerHTML = '<p class="text-danger">Error loading slots. Please try refreshing.</p>';
+        container.innerHTML = `<p class="text-danger">Error loading slots: ${err.message}. Please try refreshing.</p>`;
     }
 }
 
 function renderSlots() {
     const container = document.getElementById('slots-container');
+    const dateStr = document.getElementById('date').value;
     container.innerHTML = '';
 
     if (allSlots.length === 0) {
@@ -60,36 +68,67 @@ function renderSlots() {
     // Sort slots by start_time just in case
     allSlots.sort((a, b) => a.start_time.localeCompare(b.start_time));
 
+    // Get current time for validation
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const todayYMD = `${year}-${month}-${day}`;
+    const isToday = dateStr === todayYMD;
+
     allSlots.forEach(slot => {
+        // Server-side 'is_past' takes precedence, but keep safe default
+        let isPast = slot.is_past;
+
+        // Fallback for safety (or if API update hasn't propagated)
+        if (isPast === undefined && isToday) {
+            const [sHour, sMin] = slot.start_time.split(':');
+            const slotDate = new Date();
+            slotDate.setHours(sHour, sMin, 0, 0);
+            if (slotDate < now) {
+                isPast = true;
+            }
+        }
+
         const isBooked = bookedIds.includes(slot.id);
+        const isUnavailable = isBooked || isPast;
+
         const el = document.createElement('div');
-        el.className = `time-slot ${isBooked ? 'booked' : 'available'}`;
+        el.className = `time-slot ${isUnavailable ? 'booked' : 'available'}`;
         el.textContent = slot.display; // e.g., "10:00 AM"
         el.dataset.id = slot.id;
         el.dataset.time = slot.start_time;
 
-        if (isBooked) {
-            el.title = "Booked";
+        if (isUnavailable) {
             el.style.backgroundColor = "#ffcccc"; // Light Red
             el.style.color = "#d9534f";
             el.style.cursor = "not-allowed";
+            if (isBooked) {
+                el.title = "Booked";
+            } else {
+                el.title = "Time Passed";
+                el.style.backgroundColor = "#e0e0e0"; // Grey for past
+                el.style.color = "#a0a0a0";
+            }
         } else {
             el.style.backgroundColor = "#dff0d8"; // Light Green
             el.style.color = "#3c763d";
             el.onclick = () => handleSlotClick(slot);
         }
 
-        // Highlight Selection
-        if (selectedStartId && selectedEndId) {
-            if (isSlotInSelectedRange(slot)) {
-                el.classList.add('selected-range');
-                el.style.backgroundColor = "#4CAF50"; // Darker Green
+        // Highlight Selection (only if available or if we want to show it was selected before? No, reset if invalid usually)
+        if (!isUnavailable) {
+            if (selectedStartId && selectedEndId) {
+                if (isSlotInSelectedRange(slot)) {
+                    el.classList.add('selected-range');
+                    el.style.backgroundColor = "#4CAF50"; // Darker Green
+                    el.style.color = "white";
+                }
+            } else if (selectedStartId === slot.id) {
+                el.classList.add('selected-start');
+                el.style.backgroundColor = "#4CAF50";
                 el.style.color = "white";
             }
-        } else if (selectedStartId === slot.id) {
-            el.classList.add('selected-start');
-            el.style.backgroundColor = "#4CAF50";
-            el.style.color = "white";
         }
 
         container.appendChild(el);
@@ -119,7 +158,7 @@ function handleSlotClick(slot) {
             if (isRangeValid(startSlot, slot)) {
                 selectedEndId = slot.id;
             } else {
-                alert("Selection includes booked slots. Please select a continuous available range.");
+                showCustomAlert("Selection includes booked slots. Please select a continuous available range.", "Invalid Selection", "warning");
             }
         }
     } else {
@@ -238,6 +277,24 @@ function updateBookingInfo() {
     // Hidden Inputs
     if (inputStart) inputStart.value = toTimeStr(d1);
     if (inputEnd) inputEnd.value = toTimeStr(d2);
+
+    // [NEW] Track Selected IDs and User ID
+    let ids = [];
+    // Collect IDs in range
+    const startIndex = allSlots.findIndex(s => s.id === startSlot.id);
+    const endIndex = allSlots.findIndex(s => s.id === endSlot.id);
+    for (let i = startIndex; i <= endIndex; i++) {
+        ids.push(allSlots[i].id);
+    }
+    document.getElementById('selected_slot_ids').value = JSON.stringify(ids);
+
+    // Ensure User Identifier
+    let uid = localStorage.getItem('user_identifier');
+    if (!uid) {
+        uid = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        localStorage.setItem('user_identifier', uid);
+    }
+    document.getElementById('user_identifier').value = uid;
 }
 
 function formatTime(date) {

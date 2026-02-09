@@ -6,10 +6,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}D-MAX CRICKET CLUB{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modal.css') }}">
+    <script src="{{ url_for('static', filename='js/modal.js') }}"></script>
 </head>
 
 <body>
+
+    <!-- Custom Modal Structure -->
+    <div id="customModalOverlay" class="custom-modal-overlay">
+        <div class="custom-modal-box">
+            <div class="custom-modal-header">
+                <i id="customModalIcon" class="custom-modal-icon fas fa-info-circle"></i>
+            </div>
+            <div class="custom-modal-body">
+                <strong id="customModalTitle" class="custom-modal-title">Title</strong>
+                <p id="customModalMessage">Message goes here...</p>
+            </div>
+            <div class="custom-modal-footer">
+                <button id="customModalCancelBtn" class="modal-btn modal-btn-secondary">Cancel</button>
+                <button id="customModalConfirmBtn" class="modal-btn modal-btn-primary">OK</button>
+            </div>
+        </div>
+    </div>
 
     <nav class="navbar">
         <a href="/" class="logo">

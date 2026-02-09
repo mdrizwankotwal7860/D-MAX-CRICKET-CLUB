@@ -29,6 +29,8 @@
     </div>
 </section>
 
+
+
 <section class="about container">
     <div class="about-text">
         <h2>About Us</h2>
@@ -37,8 +39,8 @@
         <p>Open Daily: 7 AM - 11 PM</p>
     </div>
     <div class="about-image">
-        <!-- Placeholder for about image -->
-        <div class="img-placeholder"><i class="fas fa-image"></i> Turf Image</div>
+        <img src="{{ url_for('static', filename='images/turf_display.jpg') }}" alt="Box Cricket Arena Turf"
+            class="turf-display-img">
     </div>
 </section>
 {% endblock %}
